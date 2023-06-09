@@ -1,6 +1,6 @@
 import boto3
 region = 'ap-south-1'
-aws_mag_con=boto3.session.Session()
+aws_mag_con=boto3.session.Session(region_name=region)
 ec2_con_cli=aws_mag_con.client("ec2")
 response=ec2_con_cli.describe_instances()
 print(response['Reservations'])
