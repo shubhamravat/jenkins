@@ -1,6 +1,6 @@
 import boto3
-aws_mag_con=boto3.session.Session(region_name="ap-south-1")
-ec2_con_cli=aws_mag_con.client("ec2")
+aws_mag_con=boto3.session.Session()
+ec2_con_cli=aws_mag_con.client(service_name="ec2",region_name="ap-south-1")
 response=ec2_con_cli.describe_instances()
 print(response['Reservations'])
 for each_item in response['Reservations']:
@@ -10,6 +10,6 @@ for each_item in response['Reservations']:
 
 #list s3 bucket         
 
-s3_con_cli=aws_mag_con.client("s3")
+s3_con_cli=aws_mag_con.client("s3",region_name="ap-south-1")
 s3_response=s3_con_cli.list_buckets()
 Footer
