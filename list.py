@@ -1,11 +1,19 @@
 import boto3
 import pandas as pd
+from botocore.exceptions import ClientError
+import email.utils
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+
+# Create a new SES resource
+ses_client = boto3.client('ses', region_name='ap-south-1')
 
 aws_mag_con = boto3.session.Session()
-aws_ec2_con = aws_mag_con.client("ec2",region_name='ap-south-1')
-aws_s3_con = aws_mag_con.client("s3",region_name='ap-south-1')
-ssm = aws_mag_con.client("ssm",region_name='ap-south-1')
-sns_con_cli = aws_mag_con.client("sns",region_name='ap-south-1')
+aws_ec2_con = aws_mag_con.client("ec2")
+aws_s3_con = aws_mag_con.client("s3")
+ssm = aws_mag_con.client("ssm")
+sns_con_cli = aws_mag_con.client("sns")
 
 response = aws_ec2_con.describe_instances()["Reservations"]
 instance_list = []
@@ -85,3 +93,46 @@ with pd.ExcelWriter("EC2_inventory.xlsx") as writer:
 # Upload the XLSX file to S3
 with open("EC2_inventory.xlsx", "rb") as file:
     aws_s3_con.upload_fileobj(file, "ec2-shubham-inventory", "EC2_inventory.xlsx")
+
+    
+
+# Provide your own values for the email parameters
+sender = 'rawatshubham198@gmail.com'
+recipient = 'rawatshubham198@gmail.com'
+subject = 'AWS INVENTORY'
+body = 'Please find the attached INVENTORY Excel file.'
+bucket_name = 'ec2-shubham-inventory'
+excel_key = 'EC2_inventory.xlsx'
+
+s3_client = boto3.client('s3')
+
+
+
+try:
+    # Retrieve the Excel file from S3
+    response = s3_client.get_object(Bucket=bucket_name, Key=excel_key)
+    attachment_data = response['Body'].read()
+
+    msg = MIMEMultipart()
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = recipient
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    attachment = MIMEApplication(attachment_data)
+    attachment.add_header('Content-Disposition', 'attachment', filename='EC2_inventory.xlsx')
+    msg.attach(attachment)
+
+    # Send the email
+    response = ses_client.send_raw_email(
+        Source=sender,
+        Destinations=[recipient],
+        RawMessage={
+            'Data': msg.as_string()
+        }
+    )
+    print("Email sent successfully!")
+    print("Message ID:", response['MessageId'])
+except ClientError as e:
+    print("Failed to send email:", e.response['Error']['Message'])
