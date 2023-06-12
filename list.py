@@ -10,10 +10,10 @@ from email.mime.application import MIMEApplication
 ses_client = boto3.client('ses', region_name='ap-south-1')
 
 aws_mag_con = boto3.session.Session()
-aws_ec2_con = aws_mag_con.client("ec2")
-aws_s3_con = aws_mag_con.client("s3")
-ssm = aws_mag_con.client("ssm")
-sns_con_cli = aws_mag_con.client("sns")
+aws_ec2_con = aws_mag_con.client("ec2",region_name='ap-south-1')
+aws_s3_con = aws_mag_con.client("s3",region_name='ap-south-1')
+ssm = aws_mag_con.client("ssm",region_name='ap-south-1')
+sns_con_cli = aws_mag_con.client("sns",region_name='ap-south-1')
 
 response = aws_ec2_con.describe_instances()["Reservations"]
 instance_list = []
